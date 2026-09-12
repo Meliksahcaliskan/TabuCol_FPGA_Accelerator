@@ -1,0 +1,78 @@
+# ───────────────────────────────────────────────
+# Quartus Generated Output & Databases
+# ───────────────────────────────────────────────
+Datapath_components/db/
+Datapath_components/incremental_db/
+Datapath_components/simulation/
+Datapath_components/output_files/
+Datapath_components/greybox_tmp/
+Datapath_components/hb_output/
+Quartus-web-13.0.1.232-windows/
+UART/
+verilog_pratik/
+Quartus-web-13.0.1.232-windows.tar
+
+# ───────────────────────────────────────────────
+# Compiled Object Files
+# ───────────────────────────────────────────────
+*.rpt
+*.summary
+*.sof
+*.pof
+*.jdi
+*.pin
+*.smsg
+*.flow.rpt
+*.map.rpt
+*.fit.rpt
+*.asm.rpt
+*.sta.rpt
+*.eda.rpt
+*.jdi
+*.rbf
+*.ekp
+*.esf
+*.qws
+
+# ───────────────────────────────────────────────
+# Quartus Temp / Lock Files
+# ───────────────────────────────────────────────
+*.qws
+*.bak
+*.orig
+*.log
+*.tmp
+*.done
+*.dpf
+c5_pin_model_dump.txt
+*.cdf           # Usually auto-generated, optional to track
+
+# ───────────────────────────────────────────────
+# Quartus IP Generated Files
+# ───────────────────────────────────────────────
+*.sopcinfo
+hps_isw_handoff/
+*.spd
+*.ppf
+*.svd
+
+# ───────────────────────────────────────────────
+# Simulation (ModelSim / QuestaSim)
+# ───────────────────────────────────────────────
+*.vcd
+*.wlf
+transcript
+vsim.wlf
+work/
+mentor/
+
+# ───────────────────────────────────────────────
+# OS & Editor Junk
+# ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/
+.idea/
+*.png

@@ -1,0 +1,15 @@
+1-  Conflict array içindeki vertex sayısı ile fs sayısı uyumsuz. Çözüldü, conflict matrix kullanıldı. ✅
+    |
+    |
+    ---> Fikir: conflict matrix yerine conflict count array kullanılabilir belki
+
+2-  Tabu list içerisinde aynı hamlelerden birden fazla var. Aynı hamlelerin olması sorunu çözüldü. ✅
+
+3- Aspiration array eklenecek. Şu anda ekleniyor. Aspiration eklendi. ✅
+
+4- Parametre test sistemi kurulacak. ✅
+
+örnek run:
+
+./tabucol_hertz.exe 125 5 100 7 25000 "../testbenchs/DSJC/DSJC125.1.edgelist" "../testbenchs/DSJC/DSJC125.1_parametre_testleri/Rep/single_test.csv" "../testbenchs/DSJC/DSJC125.1_parametre_testleri/Rep/multi_test.csv"
+
