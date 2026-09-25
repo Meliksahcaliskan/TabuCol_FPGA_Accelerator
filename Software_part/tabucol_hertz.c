@@ -364,6 +364,7 @@ int main(int argc, char** argv){
 
     // 3. Format the time into a readable string
     char time_buffer[64];
+    char time_buffer_single[64];
     // Formats like: YYYY-MM-DD HH:MM:SS (e.g., 2026-09-12 13:05:22)
     strftime(time_buffer, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", local_time);
 
@@ -389,8 +390,9 @@ int main(int argc, char** argv){
 
     
 
-    fprintf(single_bench_file, "%s,%d,%d,%f,%d,%d\n", 
+    fprintf(single_bench_file, "%s,%d,%d,%d,%f,%d,%d\n", 
                                                         time_buffer, 
+                                                        0,
                                                         rep, 
                                                         final_fs, 
                                                         sec, 
@@ -398,7 +400,7 @@ int main(int argc, char** argv){
                                                         tabu_tenure
     );
 
-    for (i = 0; i < 9; i++){
+    for (i = 0; i < 4; i++){
         fs_solved = solve(vertex_N, color_num, iter, rep,color_array, edge_matrix, tabu_cur, &sec);
         final_fs += fs_solved;
         printf("The solved fs: %d - time : %f\n", fs_solved, sec);
@@ -411,6 +413,30 @@ int main(int argc, char** argv){
             sec_max = sec;
 
         sec_array[i+1] = sec;
+
+        raw_time = time(NULL);
+        if (raw_time == -1) {
+            perror("Failed to get current time");
+            return 1;
+        }
+
+        local_time = localtime(&raw_time);
+        if (local_time == NULL) {
+            perror("Failed to convert to local time");
+            return 1;
+        }
+
+        strftime(time_buffer_single, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", local_time);
+
+        fprintf(single_bench_file, "%s,%d,%d,%d,%f,%d,%d\n", 
+                                                            time_buffer_single,
+                                                            i+1, 
+                                                            rep, 
+                                                            fs_solved, 
+                                                            sec, 
+                                                            iter, 
+                                                            tabu_tenure
+        );
     }
 
     fprintf(multi_bench_file, "%s,%d,%d,%f,%f,%f,%f,%d,%d\n", 
