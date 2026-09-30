@@ -13,3 +13,7 @@
 
 ./tabucol_hertz.exe 125 5 100 7 25000 "../testbenchs/DSJC/DSJC125.1.edgelist" "../testbenchs/DSJC/DSJC125.1_parametre_testleri/Rep/single_test.csv" "../testbenchs/DSJC/DSJC125.1_parametre_testleri/Rep/multi_test.csv"
 
+///// bit base çalışmalar  /////
+-- Edge matrix, color array, conflict matrix, ve vertex_color değişkenleri tanımlandı ve oluşturuldu
+-- fs hesaplanması ve sonrasındaki algoritma devam edecek (popcount adder gerekebilir)
+

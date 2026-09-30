@@ -439,7 +439,7 @@ int main(int argc, char** argv){
         );
     }
 
-    fprintf(multi_bench_file, "%s,%d,%d,%f,%f,%f,%f,%d,%d\n", 
+    fprintf(multi_bench_file, "%s,%d,%f,%f,%f,%f,%f,%d,%d\n", 
                                                                     time_buffer, 
                                                                     rep, 
                                                                     final_fs/10.0, 
