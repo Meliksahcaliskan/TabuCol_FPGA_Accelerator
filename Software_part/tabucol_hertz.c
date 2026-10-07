@@ -28,6 +28,9 @@ static inline uint64_t rdtsc(void) {
     return ((uint64_t)hi << 32) | lo;
 }
 
+/*------------------File variables-----------------*/
+static FILE* conflict_file;
+
 double calculate_population_std(double data[], int n) {
     double sum = 0.0;
     double mean;
@@ -72,12 +75,13 @@ void print_tabu_list(tabu_node *head){
 }
 
 void print_conflict_matrix(int vertex_N){
+    fseek(conflict_file, 0, SEEK_SET);
     for (int i = 0; i < vertex_N; i++){
         for (int j = 0; j < vertex_N; j++)
-            printf("%d-", conflict_matrix[i][j]);
-        printf("\n");
+            fprintf(conflict_file, "%d-", conflict_matrix[i][j]);
+        fprintf(conflict_file, "\n");
     }
-    printf("\n");
+    fprintf(conflict_file, "\n");
 
     return ;
 }
@@ -165,6 +169,8 @@ int solve(int vertex_N, int color_num ,int iter, int rep,int *color_array, int *
                     do{
                         
                         rand_vertex = rand() % vertex_N;
+                        
+                        //printf("The random vertex selection: %d - %d\n", rand_vertex, is_vertex_conflict(rand_vertex, vertex_N));
                     }while (is_vertex_conflict(rand_vertex, vertex_N) == 0);
 
                     do{
@@ -184,6 +190,10 @@ int solve(int vertex_N, int color_num ,int iter, int rep,int *color_array, int *
                         fs_temp -= edge_matrix[rand_vertex][i]*(color_array[rand_vertex] == color_array[i]);
                         fs_temp += edge_matrix[rand_vertex][i]*(color_array[i] == rand_color);
                     }
+                    
+                    //printf("The vertex candidate: %d\nThe color candidate: %d\nTemp fs: %d\n", rand_vertex, rand_color, fs_temp);
+
+                    //scanf("%c", &chr);
 
                     if (fs_temp <= aspiration[fs]){
                         aspiration[fs] = fs_temp-1;
@@ -212,6 +222,8 @@ int solve(int vertex_N, int color_num ,int iter, int rep,int *color_array, int *
             }
             fs = fs_min;
             
+            //printf("The move is applied\n");
+            
             /* if (iter < 15){
                 printf("The current tabu: %d->%d\n", tabu_cur->vertex, tabu_cur->color);
                 printf("The tabu list before move: \n");
@@ -223,7 +235,9 @@ int solve(int vertex_N, int color_num ,int iter, int rep,int *color_array, int *
             tabu_cur->color = color_array[vertex_min];
             color_array[vertex_min] = color_min;
             tabu_cur = tabu_cur->next;
-
+            
+            fprintf(conflict_file, "x%d->%dx\n", vertex_min, color_min);
+            //print_tabu_list(tabu_cur);
             /* if (iter < 15){
                 printf("The tabu list after move: \n\n");
                 print_tabu_list(tabu_cur);
@@ -274,6 +288,10 @@ int solve(int vertex_N, int color_num ,int iter, int rep,int *color_array, int *
 
 int main(int argc, char** argv){
 
+    setvbuf(stdout, NULL, _IONBF, 0);   /* stdout tamponsuz */
+
+    conflict_file = fopen("C_conflict_log.txt", "w");
+
     if (argc < 9){
         printf("Abnormal parameter count.\n");
         return -1;
@@ -319,7 +337,7 @@ int main(int argc, char** argv){
 
     int color_array[vertex_N];
     
-    srand(time(NULL));
+    srand(1791378540);
 
     for (i = 0; i < vertex_N; i++){
         for (j = 0; j < vertex_N; j++){
@@ -345,8 +363,8 @@ int main(int argc, char** argv){
     FILE* single_bench_file;
     FILE* multi_bench_file;
 
-    single_bench_file = fopen(testbench_file_single, "a");
-    multi_bench_file = fopen(testbench_file_multi, "a");
+    /* single_bench_file = fopen(testbench_file_single, "a");
+    multi_bench_file = fopen(testbench_file_multi, "a"); */
 
 
     time_t raw_time = time(NULL);
@@ -390,7 +408,7 @@ int main(int argc, char** argv){
 
     
 
-    fprintf(single_bench_file, "%s,%d,%d,%d,%f,%d,%d\n", 
+    /* fprintf(single_bench_file, "%s,%d,%d,%d,%f,%d,%d\n", 
                                                         time_buffer, 
                                                         0,
                                                         rep, 
@@ -398,10 +416,10 @@ int main(int argc, char** argv){
                                                         sec, 
                                                         iter, 
                                                         tabu_tenure
-    );
+    ); */
 
     for (i = 0; i < 4; i++){
-        fs_solved = solve(vertex_N, color_num, iter, rep,color_array, edge_matrix, tabu_cur, &sec);
+        /* fs_solved = solve(vertex_N, color_num, iter, rep,color_array, edge_matrix, tabu_cur, &sec);
         final_fs += fs_solved;
         printf("The solved fs: %d - time : %f\n", fs_solved, sec);
         sec_sum += sec;
@@ -426,9 +444,9 @@ int main(int argc, char** argv){
             return 1;
         }
 
-        strftime(time_buffer_single, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", local_time);
+        strftime(time_buffer_single, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", local_time); */
 
-        fprintf(single_bench_file, "%s,%d,%d,%d,%f,%d,%d\n", 
+        /* fprintf(single_bench_file, "%s,%d,%d,%d,%f,%d,%d\n", 
                                                             time_buffer_single,
                                                             i+1, 
                                                             rep, 
@@ -436,24 +454,24 @@ int main(int argc, char** argv){
                                                             sec, 
                                                             iter, 
                                                             tabu_tenure
-        );
+        ); */
     }
 
-    fprintf(multi_bench_file, "%s,%d,%f,%f,%f,%f,%f,%d,%d\n", 
+    /* fprintf(multi_bench_file, "%s,%d,%f,%f,%f,%f,%f,%d,%d\n", 
                                                                     time_buffer, 
                                                                     rep, 
-                                                                    final_fs/10.0, 
-                                                                    sec_sum/10.0,
+                                                                    final_fs/5.0, 
+                                                                    sec_sum/5.0,
                                                                     sec_min, 
                                                                     sec_max, 
-                                                                    calculate_population_std(sec_array, 10),
+                                                                    calculate_population_std(sec_array, 5),
                                                                     iter, 
                                                                     tabu_tenure
     );
 
 
     fclose(single_bench_file);
-    fclose(multi_bench_file);
+    fclose(multi_bench_file); */
 
     for (i = 0; i < tabu_tenure; i++){
         head = tabu_cur;

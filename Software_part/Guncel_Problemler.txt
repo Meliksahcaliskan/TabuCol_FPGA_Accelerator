@@ -13,7 +13,17 @@
 
 ./tabucol_hertz.exe 125 5 100 7 25000 "../testbenchs/DSJC/DSJC125.1.edgelist" "../testbenchs/DSJC/DSJC125.1_parametre_testleri/Rep/single_test.csv" "../testbenchs/DSJC/DSJC125.1_parametre_testleri/Rep/multi_test.csv"
 
+Test çağırıs: 
+./tabucol_hertz_bitbase.exe 5 3 100 7 25000 "testing.txt" "" ""
+
 ///// bit base çalışmalar  /////
--- Edge matrix, color array, conflict matrix, ve vertex_color değişkenleri tanımlandı ve oluşturuldu
--- fs hesaplanması ve sonrasındaki algoritma devam edecek (popcount adder gerekebilir)
+1- Edge matrix, color array, conflict matrix, ve vertex_color değişkenleri tanımlandı ve oluşturuldu ✅
+2- fs hesaplanması builtin popcounter ile yapıldı ✅
+3- fs değişimi için & operasyonu ile fs_minus ve fs_plus değişkenleri atandı ve o şekilde fs değişimi bakılıp uygulandı ✅
+4- Bazen fs eksi oluyor ve buna rağmen conflict matrixte 1 kalıyor. Bakılması lazım.✅
+5- Normal ve bitbase C kodları arasındaki hamle farklarını tespit et
+    * Tabu listte bir farklılık yok
+    * Conflict listesinde bir sapma var. Şu anda iki program da conflict matrixini dosyalarına bastırıyor dosya içeriklerini kontrol etmek için başka bir program var.
+    * Conflict çıktıları aynı gibi görünüyor is_vertex_conflict fonksyionunda bir sıkıntı olabilir.
+    
 

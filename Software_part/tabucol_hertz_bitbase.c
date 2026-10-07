@@ -13,9 +13,6 @@ static inline void set_bit (uint64_t* bit_set, int v) { bit_set[v >> 6] |= (1ULL
 static inline void clr_bit (uint64_t* bit_set, int v) { bit_set[v >> 6] &= ~(1ULL << (v & 63)); }
 static inline int get_bit  (const uint64_t* bit_set, int v) { return (int)((bit_set[v >> 6] >> (v & 63)) & 1ULL) ;}
 
-/*--------------Word yardımcıları--------------------*/
-static inline uint64_t get_word (const uint64_t* bit_set, int w) { return (uint64_t)(bit_set[w]);}
-static inline void set_word (uint64_t* bit_set, uint64_t w_block, int w) { bit_set[w] = w_block ;}
 
 
 
@@ -47,6 +44,9 @@ typedef struct tabu_node
     int color;
     struct tabu_node* next;
 }tabu_node;
+
+/*------------------File variables-----------------*/
+static FILE* conflict_file;
 
 
 /*------------------matrices and color arrays-------------*/
@@ -133,10 +133,11 @@ void print_conflict_matrix(int vertex_N){
     return ;
 }
 
-int is_vertex_conflict(int target_vertex, int vertex_N){
-    for (int i = 0; i < vertex_N; i++){
-        if (conflict_matrix[target_vertex][i])
-            return 1;
+int is_vertex_conflict(int target_vertex, int word_num){
+
+    for (int w = 0; w < word_num; w++){
+        if (conflict_matrix[target_vertex][w] > 0)
+            return 1;    
     }
 
     return 0;
@@ -147,13 +148,13 @@ int solve(int vertex_N, int color_num, int word_num, int iter, int rep, tabu_nod
 
     int fs = 0;
     char chr;
-    int i,j;
+    int i,j, w, v;
     int aspiration[MAX_FS(vertex_N)];
 
     
     int rand_vertex, vertex_min;
     int rand_color, color_min;
-    int fs_temp;
+    int fs_temp, fs_minus, fs_plus;
     int fs_min;
     int rep_temp;
 
@@ -161,46 +162,52 @@ int solve(int vertex_N, int color_num, int word_num, int iter, int rep, tabu_nod
     int asp_valid;
     int debug = 0;
 
-    /* struct timespec t_start, t_end;
+    int edge_pos;
+
+
+    struct timespec t_start, t_end;
     clock_gettime(CLOCK_MONOTONIC, &t_start);
-    uint64_t cyc_start = rdtsc(); */
+    uint64_t cyc_start = rdtsc();
 
     // rastgele renk atama
     init_random_colors(color_array, vertex_N, color_num, word_num);
 
-
-    printf("Rastgele renkler atandi\n");
+    /* printf("Rastgele renkler atandi\n");
     for(int c = 0; c < color_num; c++){
         printf("The vertex bit array of color %d:\n", c);
         for (int v= 0; v < vertex_N; v++){
             printf("%d", get_bit(color_array[c], v));
         }
         printf("\n");
-    }
+    } */
 
 
-    fs = -1;
+    fs = 0;
 
     // fs sayısını hesaplama ve conflict arrayi ayarlama
     
-    printf("Conflict matrix olusturuluyor\n");
+    //printf("Conflict matrix olusturuluyor\n");
     for (i = 0; i < vertex_N; i++){
 
         for (int w = 0; w < word_num; w++){
             //fs = fs + (edge_matrix[i][j]*(color_array[i] == color_array[j]));
-            set_word(conflict_matrix[i], get_word(edge_matrix[i], w)&get_word(color_array[vertex_color[i]], w), w);
+            fs += __builtin_popcountll(edge_matrix[i][w] & color_array[vertex_color[i]][w]);
+            conflict_matrix[i][w] = edge_matrix[i][w] & color_array[vertex_color[i]][w];
         }
     }
 
+    fs /= 2;
 
-    printf("Conflict matrix olusturuldu\n");
+    //printf("The initial fs: %d\n" ,fs);
+    
+    /*printf("Conflict matrix olusturuldu\n");
     for(int c = 0; c < vertex_N; c++){
         for (int v= 0; v < vertex_N; v++){
             printf(" %d ", get_bit(conflict_matrix[c], v));
         }
         printf("\n");
-    }
-    /*
+    } */
+    
     if (fs == 0)
         return 0;
     
@@ -227,29 +234,45 @@ int solve(int vertex_N, int color_num, int word_num, int iter, int rep, tabu_nod
 
                 do{
                     fs_temp = fs;
-
+                    
                     do{
                         
                         rand_vertex = rand() % vertex_N;
-                    }while (is_vertex_conflict(rand_vertex, vertex_N) == 0);
-
+                        //printf("The random vertex selection: %d - %d\n", rand_vertex, is_vertex_conflict(rand_vertex, word_num));
+                    }while (is_vertex_conflict(rand_vertex, word_num) == 0);
+                    
                     do{
                         rand_color = rand() % color_num;
                         
-                    }while (rand_color == color_array[rand_vertex]);
+                    }while (rand_color == vertex_color[rand_vertex]);
                 
 
-                    for (i = 0; i < vertex_N; i++){
-                        fs_temp -= edge_matrix[rand_vertex][i]*(color_array[rand_vertex] == color_array[i]);
-                        fs_temp += edge_matrix[rand_vertex][i]*(color_array[i] == rand_color);
+                    edge_pos = 0;
+                    fs_minus = 0; 
+                    fs_plus = 0;
+                    
+                   
+                    for (w = 0; w < word_num; w++){
+                        fs_minus += __builtin_popcountll(edge_matrix[rand_vertex][w] & color_array[vertex_color[rand_vertex]][w]);
+                        fs_plus += __builtin_popcountll(edge_matrix[rand_vertex][w] & color_array[rand_color][w]);
                     }
+                
+                    
+                    fs_temp += (fs_plus - fs_minus);
 
+                    //printf("The vertex candidate: %d\nThe color candidate: %d\nTemp fs: %d\n", rand_vertex, rand_color, fs_temp);
+
+                    //scanf("%c", &chr);
+                    
+                    /* printf("fs temp: %d\n", fs_temp);
+                    scanf("%c", &chr); */
                     if (fs_temp <= aspiration[fs]){
                         aspiration[fs] = fs_temp-1;
                         break;
                     }
-                        
-                
+                    
+                    
+                    
                 } while (scan_tabu_list(rand_vertex, rand_color, tabu_cur));
                 
                 if (fs_temp < fs_min){
@@ -258,32 +281,61 @@ int solve(int vertex_N, int color_num, int word_num, int iter, int rep, tabu_nod
                     color_min = rand_color;
                 }
                     
-
+                
                 if (fs_temp < fs)
                     rep_temp = 1;
                 
                 rep_temp--;
-
+                
             }
             fs = fs_min;
             
+            //printf("The move is applied\n");
             
             tabu_cur->vertex = vertex_min;
-            tabu_cur->color = color_array[vertex_min];
-            color_array[vertex_min] = color_min;
-            tabu_cur = tabu_cur->next;
+            tabu_cur->color = vertex_color[vertex_min];
+            vertex_color[vertex_min] = color_min;
+            move_vertex(color_array, vertex_min, tabu_cur->color, color_min);
+            
+            fprintf(conflict_file, "x%d->%dx\n", vertex_min, color_min);
 
-           
+            /// Muhtemelen burası
+            
+
+            /* for (v = 0; v < vertex_N; v++){
+                printf("%d ", get_bit(conflict_matrix[vertex_min], v));
+            }
+            printf("\nThe target vertex: %d\n", vertex_min);
+            printf("fs plus: %d\nfs minus: %d\n", fs_plus, fs_minus); */
+
+            
+
+            
+            
             for (i = 0; i < vertex_N; i++){
-                //printf(" %d ", color_array[i]);
-                if (edge_matrix[vertex_min][i]){
-                    conflict_matrix[i][vertex_min] = color_array[i] == color_min;
-                    conflict_matrix[vertex_min][i] = color_array[i] == color_min;
+
+                
+                for (int w = 0; w < word_num; w++){
+                    conflict_matrix[i][w] = edge_matrix[i][w] & color_array[vertex_color[i]][w];
                 }
+                
+                
             }
             
+            tabu_cur = tabu_cur->next;
+            //print_tabu_list(tabu_cur);
             iter--;
+            //printf("The current fs: %d\n", fs);       
             
+            
+            /* fseek(conflict_file, 0, SEEK_SET);
+            for(int c = 0; c < vertex_N; c++){
+                for (int v= 0; v < vertex_N; v++){
+                    fprintf(conflict_file, "%d-", get_bit(conflict_matrix[c], v));
+                }
+                fprintf(conflict_file, "\n");
+            }
+            fprintf(conflict_file, "\n"); */
             
         }
     }
@@ -292,12 +344,16 @@ int solve(int vertex_N, int color_num, int word_num, int iter, int rep, tabu_nod
     clock_gettime(CLOCK_MONOTONIC, &t_end);
 
     *sec = (double)(t_end.tv_sec  - t_start.tv_sec)
-         + (double)(t_end.tv_nsec - t_start.tv_nsec) * 1e-9; */
+         + (double)(t_end.tv_nsec - t_start.tv_nsec) * 1e-9;
     
     return fs;
 }
 
 int main(int argc, char** argv){
+
+    setvbuf(stdout, NULL, _IONBF, 0);   /* stdout tamponsuz */
+
+    conflict_file = fopen("C_bit_conflict_log.txt", "w");
 
     if (argc < 9){
         printf("Abnormal parameter count.\n");
@@ -338,7 +394,7 @@ int main(int argc, char** argv){
     edge_matrix = (uint64_t **)malloc(vertex_N*sizeof(uint64_t*));
     conflict_matrix = (uint64_t **)malloc(vertex_N*sizeof(uint64_t*));
     color_array = (uint64_t**)malloc(color_num*sizeof(uint64_t*));
-    vertex_color = (int *)malloc(color_num*sizeof(int));
+    vertex_color = (int *)malloc(vertex_N*sizeof(int));
 
     for (i = 0; i < vertex_N; i++){
         edge_matrix[i] = (uint64_t *)malloc(word_num*sizeof(uint64_t));
@@ -349,7 +405,7 @@ int main(int argc, char** argv){
         color_array[i] = (uint64_t*)malloc(word_num*sizeof(uint64_t));
     }
     
-    srand(time(NULL));
+    srand(1791378540);
 
     for (i = 0; i < vertex_N; i++){
         memset(edge_matrix[i], 0, (size_t)word_num * sizeof(uint64_t));
@@ -369,12 +425,12 @@ int main(int argc, char** argv){
         set_bit(edge_matrix[vertex2], vertex1);
     }
     
-    for (i = 0; i < vertex_N; i++){
+    /* for (i = 0; i < vertex_N; i++){
         for (j = 0; j < vertex_N; j++){
             printf(" %d ", get_bit(edge_matrix[i], j));
         }
         printf("\n");
-    }
+    } */
 
     fclose(graph_file);
 
