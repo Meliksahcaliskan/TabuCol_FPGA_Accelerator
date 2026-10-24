@@ -54,6 +54,7 @@ static uint64_t **edge_matrix;
 static uint64_t **conflict_matrix;
 static uint64_t **color_array;
 static int *vertex_color;
+static int **tabu_matrix;
 
 
 
@@ -63,16 +64,11 @@ static void init_random_colors (uint64_t** color_array, int vertex_N, int color_
     for (int c = 0; c < color_num; c++)
         memset(color_array[c], 0, (size_t)word_num * sizeof(uint64_t));
     printf("memset worked\n");
-    for (int v = 0; v < vertex_N; v++){
+    
+    for (int v = 0; v < vertex_N; v++) {
         int random_color = rand() % color_num;
         vertex_color[v] = random_color;
-        uint32_t onehot = 1u << random_color;
-        
-        for (int c = 0; c < color_num; c++){
-            
-            if ((onehot >> c) & 1u) set_bit(color_array[c], v);
-            else                    clr_bit(color_array[c], v); 
-        }
+        set_bit(color_array[random_color], v);
     }
 }
 
@@ -111,6 +107,10 @@ int scan_tabu_list(int vertex, int color, tabu_node* tabu_head){
     return 0;
 }
 
+int is_move_tabu(int vertex, int color, int iter){
+    return tabu_matrix[vertex][color] <= iter;
+}
+
 void print_tabu_list(tabu_node *head){
     tabu_node *cur = head;
 
@@ -143,7 +143,7 @@ int is_vertex_conflict(int target_vertex, int word_num){
     return 0;
 }
 
-int solve(int vertex_N, int color_num, int word_num, int iter, int rep, tabu_node* tabu_cur, double *sec){
+int solve(int vertex_N, int color_num, int word_num, int iter, int rep, tabu_node* tabu_cur, double *sec, int tabu_tenure){
     
 
     int fs = 0;
@@ -294,8 +294,10 @@ int solve(int vertex_N, int color_num, int word_num, int iter, int rep, tabu_nod
             
             tabu_cur->vertex = vertex_min;
             tabu_cur->color = vertex_color[vertex_min];
+            move_vertex(color_array, vertex_min, vertex_color[vertex_min], color_min);
+            //tabu_matrix[vertex_min][vertex_color[vertex_min]] = iter - tabu_tenure;
             vertex_color[vertex_min] = color_min;
-            move_vertex(color_array, vertex_min, tabu_cur->color, color_min);
+            
             
             fprintf(conflict_file, "x%d->%dx\n", vertex_min, color_min);
 
@@ -371,6 +373,7 @@ int main(int argc, char** argv){
     char * testbench_file_multi = argv[8];
     int i, j;
 
+    
 
     /// tabu list 
     tabu_node* tabu_cur;
@@ -390,6 +393,17 @@ int main(int argc, char** argv){
     tabu_cur = head;
     ////
 
+    ////  tabu matrix /////
+    tabu_matrix = (int **)malloc(vertex_N*sizeof(int *));
+
+    for (i = 0; i < vertex_N; i++){
+        tabu_matrix[i] = (int *)malloc(color_num*sizeof(int));
+        for (j = 0; j < color_num; j++){
+            tabu_matrix[i][j] = iter;
+        }
+        //memset(tabu_matrix[i], iter, (size_t)color_num*(sizeof(int)));
+    }
+
     /*------------------Dynamically initating edge and conflict matrix and color array--------------------*/
     edge_matrix = (uint64_t **)malloc(vertex_N*sizeof(uint64_t*));
     conflict_matrix = (uint64_t **)malloc(vertex_N*sizeof(uint64_t*));
@@ -405,13 +419,13 @@ int main(int argc, char** argv){
         color_array[i] = (uint64_t*)malloc(word_num*sizeof(uint64_t));
     }
     
-    srand(1791378540);
+    srand(1792829547);
 
     for (i = 0; i < vertex_N; i++){
         memset(edge_matrix[i], 0, (size_t)word_num * sizeof(uint64_t));
         memset(conflict_matrix[i], 0, (size_t)word_num * sizeof(uint64_t));
     }
-    memset(vertex_color, 0, (size_t)color_num*sizeof(int));
+    memset(vertex_color, 0, (size_t)vertex_N*sizeof(int));
 
     FILE* graph_file;
 
@@ -469,7 +483,7 @@ int main(int argc, char** argv){
 
     printf("Bankaiiii\n");
     
-    fs_solved = solve(vertex_N, color_num, word_num, iter, rep, tabu_cur, &sec);
+    fs_solved = solve(vertex_N, color_num, word_num, iter, rep, tabu_cur, &sec, tabu_tenure);
     
     
     sec_sum = sec;
@@ -492,8 +506,19 @@ int main(int argc, char** argv){
                                                         tabu_tenure
     ); */
 
-    for (i = 0; i < 0; i++){
-        fs_solved = solve(vertex_N, color_num, word_num, iter, rep, tabu_cur, &sec);
+    for (i = 0; i < 4; i++){
+
+        // Resetting tabu list before run
+        for (j = 0; j < tabu_tenure; j++){
+            head->vertex = -1;
+            head->color = -1;
+            head = head->next;
+            
+        }
+
+        //fseek(conflict_file, 0, SEEK_SET);
+
+        fs_solved = solve(vertex_N, color_num, word_num, iter, rep, tabu_cur, &sec, tabu_tenure);
         final_fs += fs_solved;
         printf("The solved fs: %d - time : %f\n", fs_solved, sec);
         sec_sum += sec;
@@ -531,14 +556,15 @@ int main(int argc, char** argv){
         ); */
     }
 
-    /* fprintf(multi_bench_file, "%s,%d,%d,%f,%f,%f,%f,%d,%d\n", 
+    printf("Sec sum : %f\nAvg: %f\n", sec_sum, sec_sum/5.0); 
+    /* fprintf(multi_bench_file, "%s,%d,%f,%f,%f,%f,%f,%d,%d\n", 
                                                                     time_buffer, 
                                                                     rep, 
-                                                                    final_fs/10.0, 
-                                                                    sec_sum/10.0,
+                                                                    final_fs/5.0, 
+                                                                    sec_sum/5.0,
                                                                     sec_min, 
                                                                     sec_max, 
-                                                                    calculate_population_std(sec_array, 10),
+                                                                    calculate_population_std(sec_array, 5),
                                                                     iter, 
                                                                     tabu_tenure
     ); */
@@ -562,7 +588,9 @@ int main(int argc, char** argv){
     for (i = 0; i < vertex_N; i++){
         free(edge_matrix[i]);
         free(conflict_matrix[i]);
+        free(tabu_matrix[i]);
     }
+    free(tabu_matrix);
     free(edge_matrix);
     free(conflict_matrix);
     free(color_array);

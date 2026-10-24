@@ -21,9 +21,16 @@ Test çağırıs:
 2- fs hesaplanması builtin popcounter ile yapıldı ✅
 3- fs değişimi için & operasyonu ile fs_minus ve fs_plus değişkenleri atandı ve o şekilde fs değişimi bakılıp uygulandı ✅
 4- Bazen fs eksi oluyor ve buna rağmen conflict matrixte 1 kalıyor. Bakılması lazım.✅
-5- Normal ve bitbase C kodları arasındaki hamle farklarını tespit et
-    * Tabu listte bir farklılık yok
-    * Conflict listesinde bir sapma var. Şu anda iki program da conflict matrixini dosyalarına bastırıyor dosya içeriklerini kontrol etmek için başka bir program var.
-    * Conflict çıktıları aynı gibi görünüyor is_vertex_conflict fonksyionunda bir sıkıntı olabilir.
-    
+5- Normal ve bitbase C kodları arasındaki hamle farklarını tespit et ✅
+    * Tabu listte bir farklılık yok ✅
+    * Conflict listesinde bir sapma var. Şu anda iki program da conflict matrixini dosyalarına bastırıyor dosya içeriklerini kontrol etmek için başka bir program var. ✅
+    * Conflict çıktıları aynı gibi görünüyor is_vertex_conflict fonksyionunda bir sıkıntı olabilir. ✅
+    * is_vertex_conflict fonksiyonu bitbase halinde sıkıntılıymış düzeltildi. ✅
 
+6- "#define MAX_FS(x) ((x) * (x-1) / 2)" 500  ve üstü vertex sayısı için sıkıntı olur
+///// Datasets same move checks  ////
+1-  DSJC125.1 : Same moves
+2-  DSJC125.5 : Same moves
+3-  DSJC125.9 : Not Same
+4-  DSJC250.1 : Same moves
+5-  DSJC250.9 : 

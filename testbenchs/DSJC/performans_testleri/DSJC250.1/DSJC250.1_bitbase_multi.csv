@@ -1,0 +1,2 @@
+Date,Rep,Fs,Solve_time_avg,Solve_time_min,Solve_time_max,Solve_time_std,Iteration,Tabu_tenure
+2026-10-15 14:15:35,40,0.000000,0.799866,0.187717,1.087142,0.322341,1000000,7

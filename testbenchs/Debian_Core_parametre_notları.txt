@@ -1,9 +1,11 @@
-150 3 
-200 4
-250 5
-300 6 core 2  
-350 7 core 3  9-10-11-12-13-14
-400 8 core 4
-450 9 core 5
-500 10 core 6
-550 11 core 7
+150 3 core 9 (file)
+200 4 core 8 (file)
+250 5 core 1 (file) 
+300 6 core 2 (file) 
+350 7 core 3 (file) 9-10-11-12-13-14
+400 8 core 4 (file)
+450 9 core 5 (file)
+500 10 core 6 (file)
+550 11 core 7 (file)
+
+DSJC125.9 content mismatch ? Bir sıkıntı var. C ile bitbase arasında çok fazla fark var.

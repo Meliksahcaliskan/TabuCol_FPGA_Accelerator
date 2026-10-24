@@ -76,3 +76,4 @@ Thumbs.db
 .vscode/
 .idea/
 *.png
+.Rproj.user

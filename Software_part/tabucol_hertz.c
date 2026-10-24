@@ -13,8 +13,7 @@ typedef struct tabu_node
     struct tabu_node* next;
 }tabu_node;
 
-int **edge_matrix;
-int **conflict_matrix;
+
 
 static inline uint64_t rdtsc(void) {
     uint32_t lo, hi;
@@ -30,6 +29,11 @@ static inline uint64_t rdtsc(void) {
 
 /*------------------File variables-----------------*/
 static FILE* conflict_file;
+
+/*------------------Matrices-----------------------*/
+static int **edge_matrix;
+static int **conflict_matrix;
+static int  *edge_list;
 
 double calculate_population_std(double data[], int n) {
     double sum = 0.0;
@@ -237,6 +241,9 @@ int solve(int vertex_N, int color_num ,int iter, int rep,int *color_array, int *
             tabu_cur = tabu_cur->next;
             
             fprintf(conflict_file, "x%d->%dx\n", vertex_min, color_min);
+            
+            
+            
             //print_tabu_list(tabu_cur);
             /* if (iter < 15){
                 printf("The tabu list after move: \n\n");
@@ -329,23 +336,20 @@ int main(int argc, char** argv){
     /// edge-conflict matrix 
     edge_matrix = (int **)malloc(vertex_N*sizeof(int*));
     conflict_matrix = (int **)malloc(vertex_N*sizeof(int*));
+    edge_list = (int*)malloc(vertex_N*sizeof(int));
 
+    memset(edge_list, 0, (size_t)vertex_N*sizeof(int));
     for (i = 0; i < vertex_N; i++){
         edge_matrix[i] = (int *)malloc(vertex_N*sizeof(int));
         conflict_matrix[i] = (int *)malloc(vertex_N*sizeof(int));
+
+        memset(edge_matrix[i], 0, (size_t)vertex_N*sizeof(int));
+        memset(conflict_matrix[i], 0, (size_t)vertex_N*sizeof(int));
     }
 
     int color_array[vertex_N];
     
-    srand(1791378540);
-
-    for (i = 0; i < vertex_N; i++){
-        for (j = 0; j < vertex_N; j++){
-            edge_matrix[i][j] = 0;
-            conflict_matrix[i][j] = 0;
-        }
-        
-    }
+    srand(1792829547);
 
     FILE* graph_file;
 
@@ -360,10 +364,10 @@ int main(int argc, char** argv){
     }
     fclose(graph_file);
 
-    FILE* single_bench_file;
+    /* FILE* single_bench_file;
     FILE* multi_bench_file;
 
-    /* single_bench_file = fopen(testbench_file_single, "a");
+    single_bench_file = fopen(testbench_file_single, "a");
     multi_bench_file = fopen(testbench_file_multi, "a"); */
 
 
@@ -419,7 +423,18 @@ int main(int argc, char** argv){
     ); */
 
     for (i = 0; i < 4; i++){
-        /* fs_solved = solve(vertex_N, color_num, iter, rep,color_array, edge_matrix, tabu_cur, &sec);
+        
+        // Resetting tabu list before run
+        for (j = 0; j < tabu_tenure; j++){
+            head->vertex = -1;
+            head->color = -1;
+            head = head->next;
+            
+        }
+
+        //fseek(conflict_file, 0, SEEK_SET);
+
+        fs_solved = solve(vertex_N, color_num, iter, rep,color_array, edge_matrix, tabu_cur, &sec);
         final_fs += fs_solved;
         printf("The solved fs: %d - time : %f\n", fs_solved, sec);
         sec_sum += sec;
@@ -444,7 +459,7 @@ int main(int argc, char** argv){
             return 1;
         }
 
-        strftime(time_buffer_single, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", local_time); */
+        strftime(time_buffer_single, sizeof(time_buffer), "%Y-%m-%d %H:%M:%S", local_time);
 
         /* fprintf(single_bench_file, "%s,%d,%d,%d,%f,%d,%d\n", 
                                                             time_buffer_single,
@@ -457,6 +472,7 @@ int main(int argc, char** argv){
         ); */
     }
 
+    printf("Sec sum : %f\nAvg: %f\n", sec_sum, sec_sum/5.0);  
     /* fprintf(multi_bench_file, "%s,%d,%f,%f,%f,%f,%f,%d,%d\n", 
                                                                     time_buffer, 
                                                                     rep, 
@@ -467,10 +483,10 @@ int main(int argc, char** argv){
                                                                     calculate_population_std(sec_array, 5),
                                                                     iter, 
                                                                     tabu_tenure
-    );
+    ); */
 
 
-    fclose(single_bench_file);
+    /* fclose(single_bench_file);
     fclose(multi_bench_file); */
 
     for (i = 0; i < tabu_tenure; i++){
